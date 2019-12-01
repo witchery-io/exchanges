@@ -54,7 +54,7 @@ type Order struct {
 	CanceledAt            time.Time
 	AccountId             string
 	Status                OrderStatus
-	Exchange              Exchange
+	Exchange              string
 }
 
 /*
