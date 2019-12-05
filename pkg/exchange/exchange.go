@@ -7,23 +7,29 @@ import (
 
 type BaseExchangeClient struct {
 	Name            string
+	AccountId       string
 	isAuthenticated bool
 	credentials     map[string]string
 
-	OrdersChannel  chan *domain.OrderEvent
-	TradesChannel  chan *domain.TradeEvent
-	TickersChannel chan *domain.TickerEvent
-	ErrorsChannel  chan error
+	OrdersChannel     chan *domain.OrderEvent
+	TradesChannel     chan *domain.TradeEvent
+	TickersChannel    chan *domain.TickerEvent
+	OrderBooksChannel chan *domain.OrderBookEvent
+	PositionsChannel  chan *domain.PositionEvent
+	ErrorsChannel     chan error
 }
 
 type Client interface {
 	GetName() string
 	IsAuthenticated() bool
 
-	Authenticate(map[string]string) error
+	Authenticate(accountId string, credentials map[string]string) error
 
 	InitOrdersWatcher(ctx context.Context) error
 	OrderEvents(ctx context.Context) <-chan *domain.OrderEvent
+
+	InitPositionsWatcher(ctx context.Context) error
+	PositionEvents(ctx context.Context) <-chan *domain.PositionEvent
 
 	SubmitOrder(ctx context.Context, order *domain.Order) error
 	UpdateOrder(ctx context.Context, orderId string, order *domain.Order) error
@@ -36,6 +42,9 @@ type Client interface {
 
 	InitTickersWatcher(ctx context.Context, pairs []domain.CurrencyPair) error
 	TickerEvents(ctx context.Context) <-chan *domain.TickerEvent
+
+	InitOrderBooksWatcher(ctx context.Context, pairs []domain.CurrencyPair) error
+	OrderBookEvents(ctx context.Context) <-chan *domain.OrderBookEvent
 
 	Start()
 	ErrorEvents() <-chan error
@@ -59,6 +68,14 @@ func (c *BaseExchangeClient) TradeEvents(ctx context.Context) <-chan *domain.Tra
 
 func (c *BaseExchangeClient) TickerEvents(ctx context.Context) <-chan *domain.TickerEvent {
 	return c.TickersChannel
+}
+
+func (c *BaseExchangeClient) OrderBookEvents(ctx context.Context) <-chan *domain.OrderBookEvent {
+	return c.OrderBooksChannel
+}
+
+func (c *BaseExchangeClient) PositionEvents(ctx context.Context) <-chan *domain.PositionEvent {
+	return c.PositionsChannel
 }
 
 func (c *BaseExchangeClient) ErrorEvents() <-chan error {
