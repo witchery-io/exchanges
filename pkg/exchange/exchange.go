@@ -16,6 +16,7 @@ type BaseExchangeClient struct {
 	TickersChannel    chan *domain.TickerEvent
 	OrderBooksChannel chan *domain.OrderBookEvent
 	PositionsChannel  chan *domain.PositionEvent
+	BalancesChannel   chan *domain.BalanceEvent
 	ErrorsChannel     chan error
 }
 
@@ -42,6 +43,9 @@ type Client interface {
 
 	InitTickersWatcher(ctx context.Context, pairs []domain.CurrencyPair) error
 	TickerEvents(ctx context.Context) <-chan *domain.TickerEvent
+
+	InitBalancesWatcher(ctx context.Context) error
+	BalanceEvents(ctx context.Context) <-chan *domain.BalanceEvent
 
 	InitOrderBooksWatcher(ctx context.Context, pairs []domain.CurrencyPair) error
 	OrderBookEvents(ctx context.Context) <-chan *domain.OrderBookEvent
@@ -76,6 +80,10 @@ func (c *BaseExchangeClient) OrderBookEvents(ctx context.Context) <-chan *domain
 
 func (c *BaseExchangeClient) PositionEvents(ctx context.Context) <-chan *domain.PositionEvent {
 	return c.PositionsChannel
+}
+
+func (c *BaseExchangeClient) BalanceEvents(ctx context.Context) <-chan *domain.BalanceEvent {
+	return c.BalancesChannel
 }
 
 func (c *BaseExchangeClient) ErrorEvents() <-chan error {

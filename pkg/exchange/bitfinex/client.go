@@ -29,15 +29,54 @@ type client struct {
 	wsClient *websocket.Client
 }
 
+func (c *client) InitBalancesWatcher(ctx context.Context) error {
+	err := c.connectPublicWS()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *client) Start() {
 
 	for obj := range c.wsClient.Listen() {
 		switch v := obj.(type) {
 		case *websocket.ErrorEvent:
-			fmt.Println(v)
 		case error:
-			fmt.Println(v)
 			c.BaseExchangeClient.ErrorsChannel <- v
+		case *bitfinex.WalletSnapshot:
+
+			for _, w := range v.Snapshot {
+
+				currency := domain.NewCurrencyFromString(w.Currency)
+
+				c.BaseExchangeClient.BalancesChannel <- &domain.BalanceEvent{
+					Type: domain.BalanceEventTypeSnapshot,
+					Balance: domain.Balance{
+						AccountId: c.AccountId,
+						Currency:  currency,
+						Name:      w.Type,
+						Total:     util.CurrencyFloat64ToInt64(w.Balance, currency.String()),
+						Exchange:  c.Name,
+					},
+				}
+			}
+		case *bitfinex.WalletUpdate:
+
+			w := v
+			currency := domain.NewCurrencyFromString(w.Currency)
+
+			c.BaseExchangeClient.BalancesChannel <- &domain.BalanceEvent{
+				Type: domain.BalanceEventTypeUpdate,
+				Balance: domain.Balance{
+					AccountId: c.AccountId,
+					Currency:  currency,
+					Name:      w.Type,
+					Total:     util.CurrencyFloat64ToInt64(w.Balance, currency.String()),
+					Exchange:  c.Name,
+				},
+			}
 		case *bitfinex.PositionSnapshot:
 
 			for _, p := range v.Snapshot {
@@ -510,6 +549,7 @@ func New() exchange.Client {
 			TickersChannel:    make(chan *domain.TickerEvent, 0),
 			OrderBooksChannel: make(chan *domain.OrderBookEvent, 0),
 			PositionsChannel:  make(chan *domain.PositionEvent, 0),
+			BalancesChannel:   make(chan *domain.BalanceEvent, 0),
 			ErrorsChannel:     make(chan error, 0),
 		},
 		wsClient: nil,
