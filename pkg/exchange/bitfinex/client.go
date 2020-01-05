@@ -38,6 +38,7 @@ func (c *client) InitBalancesWatcher(ctx context.Context) error {
 	return nil
 }
 
+// @todo simplify
 func (c *client) Start() {
 
 	for obj := range c.wsClient.Listen() {
