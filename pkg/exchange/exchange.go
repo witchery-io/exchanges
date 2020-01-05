@@ -9,7 +9,7 @@ type BaseExchangeClient struct {
 	Name            string
 	AccountId       string
 	isAuthenticated bool
-	credentials     map[string]string
+	Credentials     map[string]string
 
 	OrdersChannel     chan *domain.OrderEvent
 	TradesChannel     chan *domain.TradeEvent

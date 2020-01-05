@@ -375,7 +375,6 @@ func (c *client) Start() {
 		}
 	}
 
-	return
 }
 
 func (c *client) InitPositionsWatcher(ctx context.Context) error {
@@ -445,6 +444,7 @@ func (c *client) InitTickersWatcher(ctx context.Context, pairs []domain.Currency
 
 func (c *client) Authenticate(accountId string, credentials map[string]string) error {
 
+	c.Credentials = credentials
 	c.AccountId = accountId
 	c.wsClient = c.wsClient.Credentials(credentials["key"], credentials["secret"])
 
@@ -526,31 +526,18 @@ func (c *client) connectPublicWS() error {
 	return nil
 }
 
-func (c *client) connectPrivateWS() error {
-
-	if c.wsClient.IsConnected() {
-		return nil
-	}
-
-	if err := c.wsClient.Connect(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func New() exchange.Client {
 
 	c := &client{
 		BaseExchangeClient: &exchange.BaseExchangeClient{
 			Name:              "bitfinex",
-			OrdersChannel:     make(chan *domain.OrderEvent, 0),
-			TradesChannel:     make(chan *domain.TradeEvent, 0),
-			TickersChannel:    make(chan *domain.TickerEvent, 0),
-			OrderBooksChannel: make(chan *domain.OrderBookEvent, 0),
-			PositionsChannel:  make(chan *domain.PositionEvent, 0),
-			BalancesChannel:   make(chan *domain.BalanceEvent, 0),
-			ErrorsChannel:     make(chan error, 0),
+			OrdersChannel:     make(chan *domain.OrderEvent),
+			TradesChannel:     make(chan *domain.TradeEvent),
+			TickersChannel:    make(chan *domain.TickerEvent),
+			OrderBooksChannel: make(chan *domain.OrderBookEvent),
+			PositionsChannel:  make(chan *domain.PositionEvent),
+			BalancesChannel:   make(chan *domain.BalanceEvent),
+			ErrorsChannel:     make(chan error),
 		},
 		wsClient: nil,
 	}
