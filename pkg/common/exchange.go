@@ -1,3 +1,4 @@
+// Package common for helpers
 package common
 
 import (
@@ -6,10 +7,11 @@ import (
 	"github.com/witchery-io/go-exchanges/pkg/exchange/bitfinex"
 )
 
-func NewMultipleExchangeEventSubscriber() {
-
-}
-
+// NewExchangeClientFromName Helper function to init exchange client from name
+// Example usage
+// ```
+// NewExchangeClientFromName("bitfinex")
+// ```
 func NewExchangeClientFromName(name string) (exchange.Client, error) {
 	switch name {
 	case "bitfinex":

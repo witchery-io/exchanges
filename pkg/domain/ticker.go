@@ -2,6 +2,7 @@ package domain
 
 import "time"
 
+// Ticker is universal ticker type for all exchange clients
 type Ticker struct {
 	Bid                int64        `json:"bid"`
 	Ask                int64        `json:"ask"`
@@ -16,6 +17,7 @@ type Ticker struct {
 	Exchange           string       `json:"exchange"`
 }
 
+// TickerEvent used when any exchange ticker related update event fires
 type TickerEvent struct {
 	Ticker Ticker
 }

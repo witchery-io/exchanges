@@ -2,6 +2,7 @@ package domain
 
 import "time"
 
+// OrderDirection direction for Order
 /*
 ENUM(
 buy
@@ -10,6 +11,7 @@ sell
 */
 type OrderDirection int
 
+// OrderContext context for Order
 /*
 ENUM(
 exchange
@@ -19,6 +21,7 @@ funding
 */
 type OrderContext int
 
+// OrderType type for Order
 /*
 ENUM(
 stop
@@ -28,6 +31,7 @@ limit
 */
 type OrderType int
 
+// OrderStatus status for Order
 /*
 ENUM(
 active
@@ -38,6 +42,7 @@ partially
 */
 type OrderStatus int
 
+// Order represents universal order structure for all exchanges
 type Order struct {
 	OrderNumber           string
 	Direction             OrderDirection
@@ -52,11 +57,12 @@ type Order struct {
 	OpenedAt              time.Time
 	UpdatedAt             time.Time
 	CanceledAt            time.Time
-	AccountId             string
+	AccountID             string
 	Status                OrderStatus
 	Exchange              string
 }
 
+// OrderEventType used by subscriber universal for all exchanges
 /*
 ENUM(
 snapshot
@@ -67,6 +73,7 @@ cancel
 */
 type OrderEventType int
 
+// OrderEvent used when any exchange order related update event fires
 type OrderEvent struct {
 	Type  OrderEventType
 	Order Order

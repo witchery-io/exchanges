@@ -1,17 +1,25 @@
 package domain
 
-type CurrencyPair struct {
-	Currency1 Currency
-	Currency2 Currency
+import "strings"
+
+// CurrencyPair is universal pair type for all exchange clients
+type CurrencyPair string
+
+func (c CurrencyPair) String() string {
+	return string(c)
 }
 
-func (c *CurrencyPair) String() string {
-	return c.Currency1.String() + c.Currency2.String()
+// GetCur1 get first Currency from pair
+func (c CurrencyPair) GetCur1() Currency {
+	return Currency(strings.Split(string(c), "|")[0])
 }
 
-func NewCurrencyPairFromString(pair string) CurrencyPair {
-	return CurrencyPair{
-		Currency1: NewCurrencyFromString(pair[0:3]),
-		Currency2: NewCurrencyFromString(pair[3:]),
-	}
+// GetCur2 get second Currency from pair
+func (c CurrencyPair) GetCur2() Currency {
+	return Currency(strings.Split(string(c), "|")[1])
+}
+
+// NewCurrencyPairFrom2Currencies create currency pair from 2 currencies
+func NewCurrencyPairFrom2Currencies(cur1, cur2 Currency) CurrencyPair {
+	return CurrencyPair(cur1 + "|" + cur2)
 }

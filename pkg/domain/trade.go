@@ -2,8 +2,9 @@ package domain
 
 import "time"
 
+// Trade is universal trade type for all exchange clients
 type Trade struct {
-	Id             string
+	ID             string
 	Pair           CurrencyPair
 	ExecutedAt     time.Time
 	OrderNumber    string
@@ -17,6 +18,7 @@ type Trade struct {
 	Exchange       Exchange
 }
 
+// TradeEventType event type for Trade
 /*
 ENUM(
 execute
@@ -25,6 +27,7 @@ update
 */
 type TradeEventType int
 
+// TradeEvent used when any exchange trade related update event fires
 type TradeEvent struct {
 	Type  TradeEventType
 	Trade Trade
