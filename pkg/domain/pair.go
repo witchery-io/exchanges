@@ -10,13 +10,15 @@ func (c *CurrencyPair) String() string {
 }
 
 // GetCur1 get first Currency from pair
-func (c *CurrencyPair) GetCur1() Currency {
-	return Currency(strings.Split(string(*c), "|")[0])
+func (c *CurrencyPair) GetCur1() *Currency {
+	currency := Currency(strings.Split(c.String(), "|")[0])
+	return &currency
 }
 
 // GetCur2 get second Currency from pair
-func (c *CurrencyPair) GetCur2() Currency {
-	return Currency(strings.Split(string(*c), "|")[1])
+func (c *CurrencyPair) GetCur2() *Currency {
+	currency := Currency(strings.Split(c.String(), "|")[1])
+	return &currency
 }
 
 // NewCurrencyPairFrom2Currencies create currency pair from 2 currencies
