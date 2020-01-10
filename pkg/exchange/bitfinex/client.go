@@ -6,8 +6,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strconv"
-	"time"
 
 	"github.com/Rhymond/go-money"
 	"github.com/bitfinexcom/bitfinex-api-go/v2"
@@ -47,121 +45,25 @@ func (c *client) Start() {
 		case error:
 			c.BaseExchangeClient.ErrorsChannel <- v
 		case *bitfinex.WalletSnapshot:
-
 			for _, w := range v.Snapshot {
-				currency := domain.Currency(w.Currency)
-
-				c.BaseExchangeClient.BalancesChannel <- &domain.BalanceEvent{
-					Type: domain.BalanceEventTypeSnapshot,
-					Balance: domain.Balance{
-						AccountID: c.AccountID,
-						Currency:  currency,
-						Name:      w.Type,
-						Total:     util.CurrencyFloat64ToInt64(w.Balance, currency.String()),
-						Exchange:  c.Name,
-					},
-				}
+				c.BaseExchangeClient.BalancesChannel <- c.NewBalanceEvent(w, domain.BalanceEventTypeSnapshot)
 			}
 		case *bitfinex.WalletUpdate:
-
-			w := v
-			currency := domain.Currency(w.Currency)
-
-			c.BaseExchangeClient.BalancesChannel <- &domain.BalanceEvent{
-				Type: domain.BalanceEventTypeUpdate,
-				Balance: domain.Balance{
-					AccountID: c.AccountID,
-					Currency:  currency,
-					Name:      w.Type,
-					Total:     util.CurrencyFloat64ToInt64(w.Balance, currency.String()),
-					Exchange:  c.Name,
-				},
-			}
+			c.BaseExchangeClient.BalancesChannel <- c.NewBalanceEvent(obj.(*bitfinex.Wallet), domain.BalanceEventTypeUpdate)
 		case *bitfinex.PositionSnapshot:
 
 			for _, p := range v.Snapshot {
-				pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(p.Symbol[1:4]), domain.Currency(p.Symbol[4:]))
-
-				status := domain.PositionStatusActive
-				if p.Status == bitfinex.PositionStatusClosed {
-					status = domain.PositionStatusClosed
-				}
-
-				c.BaseExchangeClient.PositionsChannel <- &domain.PositionEvent{
-					Type: domain.PositionEventTypeSnapshot,
-					Position: domain.Position{
-						ID:                   strconv.Itoa(int(p.Id)),
-						Pair:                 pair,
-						Status:               status,
-						Amount:               util.CurrencyFloat64ToInt64(p.Amount, pair.GetCur1().String()),
-						BasePrice:            util.CurrencyFloat64ToInt64(p.BasePrice, pair.GetCur2().String()),
-						MarginFunding:        p.MarginFunding,
-						MarginFundingType:    p.MarginFundingType,
-						ProfitLoss:           util.CurrencyFloat64ToInt64(p.ProfitLoss, pair.GetCur2().String()),
-						ProfitLossPercentage: p.ProfitLossPercentage,
-						LiquidationPrice:     util.CurrencyFloat64ToInt64(p.LiquidationPrice, pair.GetCur2().String()),
-						Exchange:             c.GetName(),
-						AccountID:            c.AccountID,
-					},
-				}
+				c.BaseExchangeClient.PositionsChannel <- c.NewPositionEvent(p, domain.PositionEventTypeSnapshot)
 			}
 
 		case *bitfinex.PositionNew:
+			p := obj.(*bitfinex.Position)
 
-			p := obj.(*bitfinex.PositionNew)
-
-			pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(p.Symbol[1:4]), domain.Currency(p.Symbol[4:]))
-
-			status := domain.PositionStatusActive
-			if p.Status == bitfinex.PositionStatusClosed {
-				status = domain.PositionStatusClosed
-			}
-
-			c.BaseExchangeClient.PositionsChannel <- &domain.PositionEvent{
-				Type: domain.PositionEventTypeNew,
-				Position: domain.Position{
-					ID:                   strconv.Itoa(int(p.Id)),
-					Pair:                 pair,
-					Status:               status,
-					Amount:               util.CurrencyFloat64ToInt64(p.Amount, pair.GetCur1().String()),
-					BasePrice:            util.CurrencyFloat64ToInt64(p.BasePrice, pair.GetCur2().String()),
-					MarginFunding:        p.MarginFunding,
-					MarginFundingType:    p.MarginFundingType,
-					ProfitLoss:           util.CurrencyFloat64ToInt64(p.ProfitLoss, pair.GetCur2().String()),
-					ProfitLossPercentage: p.ProfitLossPercentage,
-					LiquidationPrice:     util.CurrencyFloat64ToInt64(p.LiquidationPrice, pair.GetCur2().String()),
-					Exchange:             c.GetName(),
-					AccountID:            c.AccountID,
-				},
-			}
+			c.BaseExchangeClient.PositionsChannel <- c.NewPositionEvent(p, domain.PositionEventTypeNew)
 		case *bitfinex.PositionUpdate:
+			p := obj.(*bitfinex.Position)
 
-			p := obj.(*bitfinex.PositionUpdate)
-
-			pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(p.Symbol[1:4]), domain.Currency(p.Symbol[4:]))
-
-			status := domain.PositionStatusActive
-			if p.Status == bitfinex.PositionStatusClosed {
-				status = domain.PositionStatusClosed
-			}
-
-			c.BaseExchangeClient.PositionsChannel <- &domain.PositionEvent{
-				Type: domain.PositionEventTypeUpdate,
-				Position: domain.Position{
-					ID:                   strconv.Itoa(int(p.Id)),
-					Pair:                 pair,
-					Status:               status,
-					Amount:               util.CurrencyFloat64ToInt64(p.Amount, pair.GetCur1().String()),
-					BasePrice:            util.CurrencyFloat64ToInt64(p.BasePrice, pair.GetCur2().String()),
-					MarginFunding:        p.MarginFunding,
-					MarginFundingType:    p.MarginFundingType,
-					ProfitLoss:           util.CurrencyFloat64ToInt64(p.ProfitLoss, pair.GetCur2().String()),
-					ProfitLossPercentage: p.ProfitLossPercentage,
-					LiquidationPrice:     util.CurrencyFloat64ToInt64(p.LiquidationPrice, pair.GetCur2().String()),
-					Exchange:             c.GetName(),
-					AccountID:            c.AccountID,
-				},
-			}
+			c.BaseExchangeClient.PositionsChannel <- c.NewPositionEvent(p, domain.PositionEventTypeUpdate)
 		case *bitfinex.BookUpdate:
 
 			pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(v.Symbol[0:3]), domain.Currency(v.Symbol[3:]))
@@ -181,193 +83,18 @@ func (c *client) Start() {
 				},
 			}
 		case *bitfinex.OrderUpdate:
-
-			o := obj.(bitfinex.OrderUpdate)
-
-			pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(o.Symbol[1:4]), domain.Currency(o.Symbol[4:]))
-			direction := domain.OrderDirectionBuy
-			if o.Amount < 0 {
-				direction = domain.OrderDirectionSell
-			}
-
-			var oType domain.OrderType
-			oContext := domain.OrderContextMargin
-
-			switch o.Type {
-			case "MARKET":
-				oType = domain.OrderTypeMarket
-			case "EXCHANGE MARKET":
-				oContext = domain.OrderContextExchange
-				oType = domain.OrderTypeMarket
-			case "LIMIT":
-				oType = domain.OrderTypeLimit
-			case "EXCHANGE LIMIT":
-				oContext = domain.OrderContextExchange
-				oType = domain.OrderTypeLimit
-			case "STOP":
-				oType = domain.OrderTypeStop
-			case "EXCHANGE STOP":
-				oContext = domain.OrderContextExchange
-				oType = domain.OrderTypeStop
-			case "TRAILING STOP":
-			case "EXCHANGE TRAILING STOP":
-			case "FOK":
-			case "EXCHANGE FOK":
-			case "STOP LIMIT":
-			case "EXCHANGE STOP LIMIT":
-			}
-
-			c.BaseExchangeClient.OrdersChannel <- &domain.OrderEvent{
-				Type: domain.OrderEventTypeUpdate,
-				Order: domain.Order{
-					OrderNumber:           strconv.Itoa(int(o.ID)),
-					Direction:             direction,
-					Context:               oContext,
-					Type:                  oType,
-					Pair:                  pair,
-					OriginalAmount:        util.CurrencyFloat64ToInt64(o.AmountOrig, pair.GetCur1().String()),
-					RemainingAmount:       util.CurrencyFloat64ToInt64(o.Amount, pair.GetCur1().String()),
-					Price:                 util.CurrencyFloat64ToInt64(o.Price, pair.GetCur2().String()),
-					AverageExecutionPrice: util.CurrencyFloat64ToInt64(o.PriceAvg, pair.GetCur2().String()),
-					OpenedAt:              time.Unix(o.MTSCreated, 0),
-					UpdatedAt:             time.Unix(o.MTSUpdated, 0),
-					AccountID:             c.AccountID,
-					Status:                statuses[o.Status],
-					Exchange:              c.GetName(),
-				},
-			}
+			o := obj.(bitfinex.Order)
+			c.BaseExchangeClient.OrdersChannel <- c.NewOrderEvent(&o, domain.OrderEventTypeUpdate)
 		case *bitfinex.OrderNew:
-
-			o := obj.(bitfinex.OrderNew)
-
-			pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(o.Symbol[1:4]), domain.Currency(o.Symbol[4:]))
-			direction := domain.OrderDirectionBuy
-			if o.Amount < 0 {
-				direction = domain.OrderDirectionSell
-			}
-
-			var oType domain.OrderType
-			oContext := domain.OrderContextMargin
-
-			switch o.Type {
-			case "MARKET":
-				oType = domain.OrderTypeMarket
-			case "EXCHANGE MARKET":
-				oContext = domain.OrderContextExchange
-				oType = domain.OrderTypeMarket
-			case "LIMIT":
-				oType = domain.OrderTypeLimit
-			case "EXCHANGE LIMIT":
-				oContext = domain.OrderContextExchange
-				oType = domain.OrderTypeLimit
-			case "STOP":
-				oType = domain.OrderTypeStop
-			case "EXCHANGE STOP":
-				oContext = domain.OrderContextExchange
-				oType = domain.OrderTypeStop
-			case "TRAILING STOP":
-			case "EXCHANGE TRAILING STOP":
-			case "FOK":
-			case "EXCHANGE FOK":
-			case "STOP LIMIT":
-			case "EXCHANGE STOP LIMIT":
-			}
-
-			c.BaseExchangeClient.OrdersChannel <- &domain.OrderEvent{
-				Type: domain.OrderEventTypeNew,
-				Order: domain.Order{
-					OrderNumber:           strconv.Itoa(int(o.ID)),
-					Direction:             direction,
-					Context:               oContext,
-					Type:                  oType,
-					Pair:                  pair,
-					OriginalAmount:        util.CurrencyFloat64ToInt64(o.AmountOrig, pair.GetCur1().String()),
-					RemainingAmount:       util.CurrencyFloat64ToInt64(o.Amount, pair.GetCur1().String()),
-					Price:                 util.CurrencyFloat64ToInt64(o.Price, pair.GetCur2().String()),
-					AverageExecutionPrice: util.CurrencyFloat64ToInt64(o.PriceAvg, pair.GetCur2().String()),
-					OpenedAt:              time.Unix(o.MTSCreated, 0),
-					UpdatedAt:             time.Unix(o.MTSUpdated, 0),
-					AccountID:             c.AccountID,
-					Status:                statuses[o.Status],
-					Exchange:              c.GetName(),
-				},
-			}
+			o := obj.(bitfinex.Order)
+			c.BaseExchangeClient.OrdersChannel <- c.NewOrderEvent(&o, domain.OrderEventTypeNew)
 		case *bitfinex.OrderSnapshot:
-
 			for _, o := range v.Snapshot {
-				pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(o.Symbol[1:4]), domain.Currency(o.Symbol[4:]))
-				direction := domain.OrderDirectionBuy
-				if o.Amount < 0 {
-					direction = domain.OrderDirectionSell
-				}
-
-				var oType domain.OrderType
-				oContext := domain.OrderContextMargin
-
-				switch o.Type {
-				case "MARKET":
-					oType = domain.OrderTypeMarket
-				case "EXCHANGE MARKET":
-					oContext = domain.OrderContextExchange
-					oType = domain.OrderTypeMarket
-				case "LIMIT":
-					oType = domain.OrderTypeLimit
-				case "EXCHANGE LIMIT":
-					oContext = domain.OrderContextExchange
-					oType = domain.OrderTypeLimit
-				case "STOP":
-					oType = domain.OrderTypeStop
-				case "EXCHANGE STOP":
-					oContext = domain.OrderContextExchange
-					oType = domain.OrderTypeStop
-				case "TRAILING STOP":
-				case "EXCHANGE TRAILING STOP":
-				case "FOK":
-				case "EXCHANGE FOK":
-				case "STOP LIMIT":
-				case "EXCHANGE STOP LIMIT":
-				}
-
-				c.BaseExchangeClient.OrdersChannel <- &domain.OrderEvent{
-					Type: domain.OrderEventTypeSnapshot,
-					Order: domain.Order{
-						OrderNumber:           strconv.Itoa(int(o.ID)),
-						Direction:             direction,
-						Context:               oContext,
-						Type:                  oType,
-						Pair:                  pair,
-						OriginalAmount:        util.CurrencyFloat64ToInt64(o.AmountOrig, pair.GetCur1().String()),
-						RemainingAmount:       util.CurrencyFloat64ToInt64(o.Amount, pair.GetCur1().String()),
-						Price:                 util.CurrencyFloat64ToInt64(o.Price, pair.GetCur2().String()),
-						AverageExecutionPrice: util.CurrencyFloat64ToInt64(o.PriceAvg, pair.GetCur2().String()),
-						OpenedAt:              time.Unix(o.MTSCreated, 0),
-						UpdatedAt:             time.Unix(o.MTSUpdated, 0),
-						AccountID:             c.AccountID,
-						Status:                statuses[o.Status],
-						Exchange:              c.GetName(),
-					},
-				}
+				c.BaseExchangeClient.OrdersChannel <- c.NewOrderEvent(o, domain.OrderEventTypeSnapshot)
 			}
 		//case *bitfinex.Trade:
 		case *bitfinex.Ticker:
-
-			pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(v.Symbol[0:3]), domain.Currency(v.Symbol[3:]))
-
-			c.BaseExchangeClient.TickersChannel <- &domain.TickerEvent{
-				Ticker: domain.Ticker{
-					Bid:                util.CurrencyFloat64ToInt64(v.Bid, pair.GetCur1().String()),
-					Ask:                util.CurrencyFloat64ToInt64(v.Ask, pair.GetCur1().String()),
-					Last:               util.CurrencyFloat64ToInt64(v.LastPrice, pair.GetCur1().String()),
-					Volume:             util.CurrencyFloat64ToInt64(v.Volume, pair.GetCur1().String()),
-					DailyChange:        util.CurrencyFloat64ToInt64(v.DailyChange, pair.GetCur1().String()),
-					DailyChangePercent: v.DailyChangePerc,
-					High:               util.CurrencyFloat64ToInt64(v.High, pair.GetCur1().String()),
-					Low:                util.CurrencyFloat64ToInt64(v.Low, pair.GetCur1().String()),
-					Pair:               pair,
-					UpdatedAt:          time.Now(),
-					Exchange:           c.GetName(),
-				},
-			}
+			c.BaseExchangeClient.TickersChannel <- c.NewTickerEvent(v)
 		default:
 			fmt.Println(reflect.TypeOf(obj))
 		}
