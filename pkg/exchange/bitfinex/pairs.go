@@ -5,6 +5,7 @@ import "github.com/witchery-io/go-exchanges/pkg/domain"
 // AllPairs all bitfinex available pairs
 var AllPairs = []domain.CurrencyPair{
 	domain.BTCUSD,
+	domain.BTCEUR,
 	domain.LTCUSD,
 	domain.LTCBTC,
 	domain.ETHUSD,
@@ -19,7 +20,6 @@ var AllPairs = []domain.CurrencyPair{
 	domain.XMRBTC,
 	domain.DSHUSD,
 	domain.DSHBTC,
-	domain.BTCEUR,
 	domain.BTCJPY,
 	domain.XRPUSD,
 	domain.XRPBTC,

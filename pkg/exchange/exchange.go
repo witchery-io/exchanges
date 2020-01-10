@@ -2,6 +2,7 @@ package exchange
 
 import (
 	"context"
+
 	"github.com/witchery-io/go-exchanges/pkg/domain"
 )
 
@@ -11,6 +12,9 @@ type BaseExchangeClient struct {
 	AccountID       string
 	isAuthenticated bool
 	Credentials     map[string]string
+
+	Currencies    []domain.Currency
+	CurrencyPairs []domain.CurrencyPair
 
 	OrdersChannel     chan *domain.OrderEvent
 	TradesChannel     chan *domain.TradeEvent

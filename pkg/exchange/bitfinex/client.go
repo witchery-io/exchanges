@@ -5,15 +5,16 @@ package bitfinex
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strconv"
+	"time"
+
 	"github.com/Rhymond/go-money"
 	"github.com/bitfinexcom/bitfinex-api-go/v2"
 	"github.com/bitfinexcom/bitfinex-api-go/v2/websocket"
 	"github.com/witchery-io/go-exchanges/pkg/domain"
 	"github.com/witchery-io/go-exchanges/pkg/exchange"
 	"github.com/witchery-io/go-exchanges/pkg/util"
-	"reflect"
-	"strconv"
-	"time"
 )
 
 var statuses = map[bitfinex.OrderStatus]domain.OrderStatus{
@@ -40,7 +41,6 @@ func (c *client) InitBalancesWatcher(ctx context.Context) error {
 
 // @todo simplify
 func (c *client) Start() {
-
 	for obj := range c.wsClient.Listen() {
 		switch v := obj.(type) {
 		case *websocket.ErrorEvent:
@@ -49,7 +49,6 @@ func (c *client) Start() {
 		case *bitfinex.WalletSnapshot:
 
 			for _, w := range v.Snapshot {
-
 				currency := domain.Currency(w.Currency)
 
 				c.BaseExchangeClient.BalancesChannel <- &domain.BalanceEvent{
@@ -81,7 +80,6 @@ func (c *client) Start() {
 		case *bitfinex.PositionSnapshot:
 
 			for _, p := range v.Snapshot {
-
 				pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(p.Symbol[1:4]), domain.Currency(p.Symbol[4:]))
 
 				status := domain.PositionStatusActive
@@ -106,7 +104,6 @@ func (c *client) Start() {
 						AccountID:            c.AccountID,
 					},
 				}
-
 			}
 
 		case *bitfinex.PositionNew:
@@ -375,11 +372,9 @@ func (c *client) Start() {
 			fmt.Println(reflect.TypeOf(obj))
 		}
 	}
-
 }
 
 func (c *client) InitPositionsWatcher(ctx context.Context) error {
-
 	err := c.connectPublicWS()
 	if err != nil {
 		return err
@@ -389,7 +384,6 @@ func (c *client) InitPositionsWatcher(ctx context.Context) error {
 }
 
 func (c *client) InitOrdersWatcher(ctx context.Context) error {
-
 	err := c.connectPublicWS()
 	if err != nil {
 		return err
@@ -412,7 +406,6 @@ func (c *client) InitTradesWatcher(ctx context.Context, pairs []domain.CurrencyP
 }
 
 func (c *client) InitOrderBooksWatcher(ctx context.Context, pairs []domain.CurrencyPair) error {
-
 	err := c.connectPublicWS()
 	if err != nil {
 		return err
@@ -427,7 +420,6 @@ func (c *client) InitOrderBooksWatcher(ctx context.Context, pairs []domain.Curre
 }
 
 func (c *client) InitTickersWatcher(ctx context.Context, pairs []domain.CurrencyPair) error {
-
 	err := c.connectPublicWS()
 	if err != nil {
 		return err
@@ -444,17 +436,14 @@ func (c *client) InitTickersWatcher(ctx context.Context, pairs []domain.Currency
 }
 
 func (c *client) Authenticate(accountID string, credentials map[string]string) error {
-
 	c.Credentials = credentials
 	c.AccountID = accountID
 	c.wsClient = c.wsClient.Credentials(credentials["key"], credentials["secret"])
 
 	return nil
-
 }
 
 func (c *client) SubmitOrder(ctx context.Context, order *domain.Order) error {
-
 	amount := order.OriginalAmount
 	if order.Direction == domain.OrderDirectionSell {
 		amount = -1 * amount
@@ -495,7 +484,6 @@ func (c *client) SubmitOrder(ctx context.Context, order *domain.Order) error {
 	}
 
 	return nil
-
 }
 
 func (c *client) UpdateOrder(ctx context.Context, orderID string, order *domain.Order) error {
@@ -515,7 +503,6 @@ func (c *client) GetOrders(ctx context.Context) ([]*domain.Order, error) {
 }
 
 func (c *client) connectPublicWS() error {
-
 	if c.wsClient.IsConnected() {
 		return nil
 	}
@@ -529,7 +516,6 @@ func (c *client) connectPublicWS() error {
 
 // New new bitfinex Client implementation
 func New() exchange.Client {
-
 	c := &client{
 		BaseExchangeClient: &exchange.BaseExchangeClient{
 			Name:              "bitfinex",

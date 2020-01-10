@@ -3,11 +3,12 @@ package common
 
 import (
 	"errors"
+
 	"github.com/witchery-io/go-exchanges/pkg/exchange"
 	"github.com/witchery-io/go-exchanges/pkg/exchange/bitfinex"
 )
 
-// NewExchangeClientFromName Helper function to init exchange client from name
+// NewExchangeClientFromName helper function to init exchange client from name
 // Example usage
 // ```
 // NewExchangeClientFromName("bitfinex")

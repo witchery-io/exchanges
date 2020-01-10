@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/Rhymond/go-money"
 	"math"
+
+	"github.com/Rhymond/go-money"
 )
 
 // CurrencyFloat64ToInt64 convert money from float to integer
