@@ -49,7 +49,8 @@ func (c *client) Start() {
 				c.BaseExchangeClient.BalancesChannel <- c.NewBalanceEvent(w, domain.BalanceEventTypeSnapshot)
 			}
 		case *bitfinex.WalletUpdate:
-			c.BaseExchangeClient.BalancesChannel <- c.NewBalanceEvent(obj.(*bitfinex.Wallet), domain.BalanceEventTypeUpdate)
+			w := bitfinex.Wallet(*v)
+			c.BaseExchangeClient.BalancesChannel <- c.NewBalanceEvent(&w, domain.BalanceEventTypeUpdate)
 		case *bitfinex.PositionSnapshot:
 
 			for _, p := range v.Snapshot {
@@ -57,13 +58,11 @@ func (c *client) Start() {
 			}
 
 		case *bitfinex.PositionNew:
-			p := obj.(*bitfinex.Position)
-
-			c.BaseExchangeClient.PositionsChannel <- c.NewPositionEvent(p, domain.PositionEventTypeNew)
+			p := bitfinex.Position(*v)
+			c.BaseExchangeClient.PositionsChannel <- c.NewPositionEvent(&p, domain.PositionEventTypeNew)
 		case *bitfinex.PositionUpdate:
-			p := obj.(*bitfinex.Position)
-
-			c.BaseExchangeClient.PositionsChannel <- c.NewPositionEvent(p, domain.PositionEventTypeUpdate)
+			p := bitfinex.Position(*v)
+			c.BaseExchangeClient.PositionsChannel <- c.NewPositionEvent(&p, domain.PositionEventTypeUpdate)
 		case *bitfinex.BookUpdate:
 
 			pair := domain.NewCurrencyPairFrom2Currencies(domain.Currency(v.Symbol[0:3]), domain.Currency(v.Symbol[3:]))
@@ -83,10 +82,10 @@ func (c *client) Start() {
 				},
 			}
 		case *bitfinex.OrderUpdate:
-			o := obj.(bitfinex.Order)
+			o := bitfinex.Order(*v)
 			c.BaseExchangeClient.OrdersChannel <- c.NewOrderEvent(&o, domain.OrderEventTypeUpdate)
 		case *bitfinex.OrderNew:
-			o := obj.(bitfinex.Order)
+			o := bitfinex.Order(*v)
 			c.BaseExchangeClient.OrdersChannel <- c.NewOrderEvent(&o, domain.OrderEventTypeNew)
 		case *bitfinex.OrderSnapshot:
 			for _, o := range v.Snapshot {
@@ -246,7 +245,7 @@ func (c *client) connectPublicWS() error {
 }
 
 // New new bitfinex Client implementation
-func New() exchange.Client {
+func New(options exchange.ClientOptions) exchange.Client {
 	c := &client{
 		BaseExchangeClient: &exchange.BaseExchangeClient{
 			Name:              "bitfinex",

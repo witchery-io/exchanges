@@ -13,10 +13,10 @@ import (
 // ```
 // NewExchangeClientFromName("bitfinex")
 // ```
-func NewExchangeClientFromName(name string) (exchange.Client, error) {
+func NewExchangeClientFromName(name string, options exchange.ClientOptions) (exchange.Client, error) {
 	switch name {
 	case "bitfinex":
-		return bitfinex.New(), nil
+		return bitfinex.New(options), nil
 	default:
 		return nil, errors.New("exchange not found")
 	}

@@ -2,6 +2,7 @@ package exchange
 
 import (
 	"context"
+	"log"
 
 	"github.com/witchery-io/go-exchanges/pkg/domain"
 )
@@ -23,6 +24,13 @@ type BaseExchangeClient struct {
 	PositionsChannel  chan *domain.PositionEvent
 	BalancesChannel   chan *domain.BalanceEvent
 	ErrorsChannel     chan error
+}
+
+type ClientOptions struct {
+	Logger *log.Logger
+	Debug  bool
+	// @todo rid off generic
+	Additional interface{}
 }
 
 // Client interface for all exchanges
