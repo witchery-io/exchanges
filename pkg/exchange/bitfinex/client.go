@@ -5,14 +5,14 @@ package bitfinex
 import (
 	"context"
 	"fmt"
-	"reflect"
-
 	"github.com/Rhymond/go-money"
 	"github.com/bitfinexcom/bitfinex-api-go/v2"
 	"github.com/bitfinexcom/bitfinex-api-go/v2/websocket"
+	"github.com/op/go-logging"
 	"github.com/witchery-io/go-exchanges/pkg/domain"
 	"github.com/witchery-io/go-exchanges/pkg/exchange"
 	"github.com/witchery-io/go-exchanges/pkg/util"
+	"os"
 )
 
 var statuses = map[bitfinex.OrderStatus]domain.OrderStatus{
@@ -96,7 +96,7 @@ func (c *client) Start() {
 		case *bitfinex.Ticker:
 			c.BaseExchangeClient.TickersChannel <- c.NewTickerEvent(v)
 		default:
-			fmt.Println(reflect.TypeOf(obj))
+			//fmt.Println(reflect.TypeOf(obj))
 		}
 	}
 }
@@ -126,7 +126,8 @@ func (c *client) InitTradesWatcher(ctx context.Context, pairs []domain.CurrencyP
 	}
 
 	for _, pair := range pairs {
-		_, _ = c.wsClient.SubscribeTrades(ctx, pair.String())
+		_, _ = c.wsClient.SubscribeTrades(ctx,
+			fmt.Sprintf("%s%s", pair.GetCur1().String(), pair.GetCur2().String()))
 	}
 
 	return nil
@@ -139,7 +140,9 @@ func (c *client) InitOrderBooksWatcher(ctx context.Context, pairs []domain.Curre
 	}
 
 	for _, pair := range pairs {
-		_, _ = c.wsClient.SubscribeBook(ctx, pair.String(), bitfinex.Precision0,
+		_, _ = c.wsClient.SubscribeBook(ctx,
+			fmt.Sprintf("%s%s", pair.GetCur1().String(), pair.GetCur2().String()),
+			bitfinex.Precision0,
 			bitfinex.FrequencyRealtime, 25)
 	}
 
@@ -153,7 +156,8 @@ func (c *client) InitTickersWatcher(ctx context.Context, pairs []domain.Currency
 	}
 
 	for _, pair := range pairs {
-		_, err := c.wsClient.SubscribeTicker(ctx, pair.String())
+		pairS := fmt.Sprintf("%s%s", pair.GetCur1().String(), pair.GetCur2().String())
+		_, err := c.wsClient.SubscribeTicker(ctx, pairS)
 		if err != nil {
 			return err
 		}
@@ -259,6 +263,13 @@ func New() exchange.Client {
 
 	p := websocket.NewDefaultParameters()
 	p.ManageOrderbook = true
+	p.LogTransport = false
+	logger := logging.MustGetLogger("lib")
+	backend1 := logging.NewLogBackend(os.Stdout, "", 0)
+	backend1Leveled := logging.AddModuleLevel(backend1)
+	backend1Leveled.SetLevel(logging.CRITICAL, "")
+	logging.SetBackend(backend1Leveled)
+	p.Logger = logger
 	c.wsClient = websocket.NewWithParams(p)
 
 	return c
