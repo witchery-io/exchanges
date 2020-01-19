@@ -241,7 +241,7 @@ func (c *client) connectPublicWS() error {
 }
 
 // New new bitfinex Client implementation
-func New() exchange.Client {
+func New(options exchange.ClientOptions) exchange.Client {
 	c := &client{
 		BaseExchangeClient: &exchange.BaseExchangeClient{
 			Name:              "bitfinex",
@@ -258,6 +258,11 @@ func New() exchange.Client {
 
 	p := websocket.NewDefaultParameters()
 	p.ManageOrderbook = true
+
+	if !options.Debug {
+		p.LogTransport = false
+	}
+
 	c.wsClient = websocket.NewWithParams(p)
 
 	return c
